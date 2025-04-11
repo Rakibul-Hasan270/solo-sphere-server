@@ -9,7 +9,7 @@ app.use(express.json());
 
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.7ks5x.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -27,10 +27,24 @@ async function run() {
         // await client.connect();
 
         const jobsCollection = client.db('soloSphereDB').collection('jobs');
+        const bidCollection = client.db('soloSphereDB').collection('bids');
 
         app.get('/jobs', async (req, res) => {
             const result = await jobsCollection.find().toArray();
             res.send(result)
+        })
+
+        app.get('/jobDetail/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const result = await jobsCollection.findOne(filter);
+            res.send(result);
+        })
+
+        app.post('/bid', async (req, res) => {
+            const bidInfo = req.body;
+            const result = bidCollection.insertOne(bidInfo);
+            res.send(result);
         })
 
         // Send a ping to confirm a successful connection
