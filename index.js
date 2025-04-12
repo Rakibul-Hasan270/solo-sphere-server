@@ -43,7 +43,21 @@ async function run() {
 
         app.post('/bid', async (req, res) => {
             const bidInfo = req.body;
-            const result = bidCollection.insertOne(bidInfo);
+            const result = await bidCollection.insertOne(bidInfo);
+            res.send(result);
+        })
+
+        app.post('/addJob', async (req, res) => {
+            const jobInfo = req.body;
+            const result = await jobsCollection.insertOne(jobInfo);
+            res.send(result);
+        })
+
+        // kono email ke patai diye data kuje niea asa--||-- const jobInfo = { job_title, deadline, category, min_price, max_price, description, buyer: { email, name: user?.displayName, photo: user?.photoURL } };
+        app.get('/myJob/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { 'buyer.email': email };
+            const result = await jobsCollection.find({query}).toArray();
             res.send(result);
         })
 
