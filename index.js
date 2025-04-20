@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 4000;
 const app = express();
 
@@ -9,7 +10,6 @@ app.use(express.json());
 
 
 
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.7ks5x.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -54,11 +54,48 @@ async function run() {
         })
 
         // kono email ke patai diye data kuje niea asa--||-- const jobInfo = { job_title, deadline, category, min_price, max_price, description, buyer: { email, name: user?.displayName, photo: user?.photoURL } };
+
         app.get('/myJob/:email', async (req, res) => {
             const email = req.params.email;
             const query = { 'buyer.email': email };
-            const result = await jobsCollection.find({query}).toArray();
+            // console.log(query, 'ami query')
+            const result = await jobsCollection.find(query).toArray();
             res.send(result);
+        })
+
+        app.put('/updateInfo/:id', async (req, res) => {
+            const id = req.params.id;
+            const info = req.body;
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    ...info
+                }
+            }
+            const result = await jobsCollection.updateOne(filter,  updateDoc, options);
+            res.send(result);
+        })
+
+        // get all jobs posted by a specific user
+        // app.get('/jobs/:email', async (req, res) => {
+        //     const email = req.params.email
+        //     const query = { 'buyer.email': email }
+        //     const result = await jobsCollection.find(query).toArray()
+        //     res.send(result)
+        // })
+
+        app.delete('/job/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const result = await jobsCollection.deleteOne(filter);
+            res.send(result);
+        })
+
+        app.put('/update/:id', async (req, res) => {
+            const id = req.params.id;
+            const jobBody = req.body;
+
         })
 
         // Send a ping to confirm a successful connection
