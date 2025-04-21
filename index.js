@@ -31,6 +31,7 @@ async function run() {
 
         app.get('/jobs', async (req, res) => {
             const result = await jobsCollection.find().toArray();
+            console.log(result)
             res.send(result)
         })
 
@@ -54,7 +55,6 @@ async function run() {
         })
 
         // kono email ke patai diye data kuje niea asa--||-- const jobInfo = { job_title, deadline, category, min_price, max_price, description, buyer: { email, name: user?.displayName, photo: user?.photoURL } };
-
         app.get('/myJob/:email', async (req, res) => {
             const email = req.params.email;
             const query = { 'buyer.email': email };
@@ -73,7 +73,7 @@ async function run() {
                     ...info
                 }
             }
-            const result = await jobsCollection.updateOne(filter,  updateDoc, options);
+            const result = await jobsCollection.updateOne(filter, updateDoc, options);
             res.send(result);
         })
 
@@ -96,6 +96,13 @@ async function run() {
             const id = req.params.id;
             const jobBody = req.body;
 
+        })
+
+        app.get('/myBids/:email', async (req, res) => {
+            const email = req.params.email;
+            const filter = { email };
+            const result = await bidCollection.find(filter).toArray();
+            res.send(result);
         })
 
         // Send a ping to confirm a successful connection
