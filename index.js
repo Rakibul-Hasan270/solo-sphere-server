@@ -14,8 +14,23 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-
-
+// verify Token
+const verifyToken = (req, res, next) => {
+    const token = req.cookies.token;
+    if (!token) {
+        return res.status(401).send('unauthorized access');
+    }
+    if (token) {
+        jwt.verify(token, process.env.ACCESS_TOKEN, (error, decoded) => {
+            if (error) {
+                return res.status(401).send('unauthorized access');
+            }
+            // console.log(decoded);
+            req.user = decoded;
+            next();
+        })
+    }
+}
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.7ks5x.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -76,22 +91,24 @@ async function run() {
             res.send(result);
         })
 
-        app.post('/addJob', async (req, res) => {
+        app.post('/addJob',verifyToken, async (req, res) => {
             const jobInfo = req.body;
             const result = await jobsCollection.insertOne(jobInfo);
             res.send(result);
         })
 
         // kono email ke patai diye data kuje niea asa--||-- const jobInfo = { job_title, deadline, category, min_price, max_price, description, buyer: { email, name: user?.displayName, photo: user?.photoURL } };
-        app.get('/myJob/:email', async (req, res) => {
+        app.get('/myJob/:email', verifyToken, async (req, res) => {
+            const tokenEmail = req.user.email;
             const email = req.params.email;
+            if (tokenEmail !== email) return res.status(403).send({ message: 'forbidden access' });
             const query = { 'buyer.email': email };
             // console.log(query, 'ami query')
             const result = await jobsCollection.find(query).toArray();
             res.send(result);
         })
 
-        app.put('/updateInfo/:id', async (req, res) => {
+        app.put('/updateInfo/:id',verifyToken, async (req, res) => {
             const id = req.params.id;
             const info = req.body;
             const filter = { _id: new ObjectId(id) };
@@ -120,22 +137,26 @@ async function run() {
             res.send(result);
         })
 
-        // app.put('/update/:id', async (req, res) => {
-        //     const id = req.params.id;
-        //     const jobBody = req.body;
-
-        // })
-
         // akta user email (property) diye database theke data neyha 
-        app.get('/myBids/:email', async (req, res) => {
+        app.get('/myBids/:email', verifyToken, async (req, res) => {
+            const emailToken = req.user.email;
             const email = req.params.email;
+            if (emailToken !== email) {
+                return res.status(401).send({ message: 'forbidden access' });
+            }
             const filter = { email };
             const result = await bidCollection.find(filter).toArray();
             res.send(result);
         })
 
-        app.get('/bidRequest/:email', async (req, res) => {
+        app.get('/bidRequest/:email', verifyToken, async (req, res) => {
+            const emailToken = req.user.email;
             const email = req.params.email;
+            console.log(emailToken,' email token')
+            console.log(email,' email ')
+            if (emailToken !== email) {
+                return res.status(401).send({ message: 'forbidden access' });
+            }
             const filter = { 'buyer.email': email };
             const result = await bidCollection.find(filter).toArray();
             res.send(result);
