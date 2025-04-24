@@ -87,11 +87,19 @@ async function run() {
 
         app.post('/bid', async (req, res) => {
             const bidInfo = req.body;
+            const query = {
+                jobId: bidInfo.jobId,
+                email: bidInfo.email
+            }
+            const alreadyAdded = await bidCollection.findOne(query);
+            if (alreadyAdded) {
+                return res.status(400).send({ message: 'you have already bid this job' });
+            }
             const result = await bidCollection.insertOne(bidInfo);
             res.send(result);
         })
 
-        app.post('/addJob',verifyToken, async (req, res) => {
+        app.post('/addJob', verifyToken, async (req, res) => {
             const jobInfo = req.body;
             const result = await jobsCollection.insertOne(jobInfo);
             res.send(result);
@@ -108,7 +116,7 @@ async function run() {
             res.send(result);
         })
 
-        app.put('/updateInfo/:id',verifyToken, async (req, res) => {
+        app.put('/updateInfo/:id', verifyToken, async (req, res) => {
             const id = req.params.id;
             const info = req.body;
             const filter = { _id: new ObjectId(id) };
@@ -152,8 +160,6 @@ async function run() {
         app.get('/bidRequest/:email', verifyToken, async (req, res) => {
             const emailToken = req.user.email;
             const email = req.params.email;
-            console.log(emailToken,' email token')
-            console.log(email,' email ')
             if (emailToken !== email) {
                 return res.status(401).send({ message: 'forbidden access' });
             }
@@ -172,7 +178,6 @@ async function run() {
                 $set: { ...currentStatus }
             }
             const result = await bidCollection.updateOne(query, updateDoc);
-            console.log(result)
             res.send(result);
         })
 
