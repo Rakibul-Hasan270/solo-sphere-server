@@ -62,6 +62,15 @@ async function run() {
             }).send({ success: true })
         })
 
+        // app.get('/bid-count', async (req, res) => {
+        //     try {
+        //         const count = await jobsCollection.estimatedDocumentCount(); // বা .countDocuments() ও ইউজ করা যায়
+        //         res.send({ total: count });
+        //     } catch (err) {
+        //         res.status(500).send({ message: 'Error counting bids', error: err.message });
+        //     }
+        // });
+
         app.get('/logout', (req, res) => {
             res.clearCookie('token', {
                 httpOnly: true,
@@ -74,7 +83,6 @@ async function run() {
 
         app.get('/jobs', async (req, res) => {
             const result = await jobsCollection.find().toArray();
-            // console.log(result)
             res.send(result)
         })
 
@@ -179,6 +187,20 @@ async function run() {
             }
             const result = await bidCollection.updateOne(query, updateDoc);
             res.send(result);
+        })
+
+        // count for pagination
+        app.get('/jobs-count', async (req, res) => {
+            const count = await jobsCollection.countDocuments();
+            res.send({ count });
+        })
+
+        // all jobs for pagination
+        app.get('/all-jobs', async (req, res) => {
+            const page = parseInt(req.query.page);
+            const size = parseInt(req.query.size);
+            const result = await jobsCollection.find().skip(page * size).limit(size).toArray();
+            res.send(result)
         })
 
 
